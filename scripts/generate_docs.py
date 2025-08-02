@@ -70,6 +70,25 @@ class DocGenerator:
                 print(f"拷贝目录: {project_name}/figures")
             print(f"处理项目: {project_name} -> {dest_project}")
 
+    def get_readme_title(self, project_name: str, category: str) -> str:
+        """从README_zh.md文件中提取一级标题"""
+        readme_path = self.output_dir / category / project_name / "README_zh.md"
+        if readme_path.exists():
+            try:
+                with open(readme_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    # 查找第一个一级标题
+                    lines = content.split('\n')
+                    for line in lines:
+                        line = line.strip()
+                        if line.startswith('# ') and len(line) > 2:
+                            return line[2:].strip()  # 移除 "# " 前缀
+            except Exception as e:
+                print(f"读取 {project_name}/README_zh.md 标题时出错: {e}")
+        
+        # 如果无法读取标题，使用项目名称作为后备
+        return project_name.replace("etherkit_", "").replace("_", " ").title()
+
     def generate_category_index(self, category: str, category_name: str, projects: List[str]) -> str:
         """生成分类索引页面"""
         title_length = len(category_name.encode('utf-8'))
@@ -82,11 +101,11 @@ class DocGenerator:
 .. toctree::
    :maxdepth: 2
    :caption: {category_name}
-   :numbered:
 
 """
         for project in projects:
-            content += f"   {project}/README_zh\n"
+            title = self.get_readme_title(project, category)
+            content += f"   {project}/README_zh <{title}>\n"
         content += f"\n这些示例展示了 EtherKit SDK 的 {category_name}。\n"
         return content
 
@@ -104,7 +123,6 @@ class DocGenerator:
 .. toctree::
    :maxdepth: 2
    :caption: 目录
-   :numbered:
 
    basic/index
    driver/index
