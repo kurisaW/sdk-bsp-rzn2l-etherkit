@@ -12,30 +12,44 @@
 #
 import os
 import sys
+import yaml
 sys.path.insert(0, os.path.abspath('..'))
+
+# 加载配置文件
+def load_config():
+    """加载配置文件"""
+    config_path = os.path.join(os.path.dirname(__file__), 'config.yaml')
+    if os.path.exists(config_path):
+        with open(config_path, 'r', encoding='utf-8') as f:
+            return yaml.safe_load(f)
+    return {}
+
+config = load_config()
+project_config = config.get('project', {})
+sphinx_config = config.get('sphinx', {})
 
 # -- Project information -----------------------------------------------------
 
-project = 'EtherKit_SDK_Docs'
-copyright = '2025, apache'
-author = 'kurisaw'
+project = project_config.get('name', 'SDK_Docs')
+copyright = project_config.get('copyright', '2025, apache')
+author = project_config.get('author', 'unknown')
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = project_config.get('version', '0.0.1')
 master_doc = 'index'
+
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = [
-    'myst_parser'
-]
+extensions = sphinx_config.get('extensions', ['myst_parser'])
 
-source_suffix = {
+source_suffix = sphinx_config.get('source_suffix', {
     '.rst': 'restructuredtext',
     '.md': 'markdown',
-}
+})
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -44,7 +58,7 @@ templates_path = ['_templates']
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = 'zh_CN'
+language = project_config.get('language', 'zh_CN')
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -56,7 +70,7 @@ exclude_patterns = []
 # The theme to use for HTML and HTML Help pages.  See the documentation
 # for a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = sphinx_config.get('theme', 'sphinx_rtd_theme')
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -71,7 +85,7 @@ html_static_path = ['_static']
 
 # -- MyST Parser configuration ----------------------------------------------
 
-myst_enable_extensions = [
+myst_enable_extensions = sphinx_config.get('myst_extensions', [
     "colon_fence",
     "deflist",
     "dollarmath",
@@ -82,7 +96,7 @@ myst_enable_extensions = [
     "strikethrough",
     "substitution",
     "tasklist",
-]
+])
 
 # MyST图片配置
 myst_gfm_only = False
@@ -94,8 +108,8 @@ myst_url_schemes = ('http', 'https', 'mailto', 'ftp')
 
 # 图片路径配置
 html_extra_path = []
-html_css_files = []
-html_js_files = []
+html_css_files = ['version_menu.css']
+html_js_files = ['version_menu.js']
 
 # 配置图片路径处理
 html_favicon = None

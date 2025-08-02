@@ -37,7 +37,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('source/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -46,39 +46,33 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r source/requirements.txt
 
-      - name: Generate documentation from project READMEs
+      - name: Load version configuration
         run: |
-          python scripts/generate_docs.py
-          echo "=== Script completed, checking generated files ==="
-          ls -la source/
-          echo "=== Checking for category directories ==="
-          find source -type d -name "basic" -o -name "driver" -o -name "component" -o -name "protocol" -exec ls -la {} \;
+          echo "=== 加载版本配置 ==="
+          cat .github/versions.list
+          echo "=== 版本列表 ==="
+          grep -v '^#' .github/versions.list | grep -v '^$' | while read line; do
+            version=$(echo "$line" | cut -d'#' -f1 | xargs)
+            echo "  - $version"
+          done
+
+      - name: Generate multi-version documentation
+        run: |
+          echo "=== 开始生成多版本文档 ==="
+          cd source
+          python version_generator.py
           
       - name: Debug generated structure
         run: |
-          echo "=== Generated directory structure ==="
-          find source -type d -name "basic" -o -name "driver" -o -name "component" -o -name "protocol" | head -20
-          echo "=== Generated index files ==="
-          find source -name "index.rst" | head -10
-          echo "=== Checking for image files ==="
-          find source -name "*.png" | head -10
-          echo "=== Checking for README files ==="
-          find source -name "README*.md" | head -10
-          echo "=== Checking driver category specifically ==="
-          ls -la source/driver/
-          cat source/driver/index.rst
-
-      - name: Build docs
-        run: |
-          cd source
-          sphinx-build -b html . _build/html || {
-            echo "=== Sphinx build failed, checking for common issues ==="
-            echo "=== Checking for missing files ==="
-            find . -name "*.md" | head -10
-            echo "=== Checking for missing images ==="
-            find . -name "*.png" | head -10
-            exit 1
-          }
+          echo "=== 生成的目录结构 ==="
+          find source/_build/html -type d -name "latest" -o -name "v*" | head -10
+          echo "=== 检查版本目录内容 ==="
+          for dir in source/_build/html/latest source/_build/html/v*; do
+            if [ -d "$dir" ]; then
+              echo "目录: $dir"
+              ls -la "$dir" | head -5
+            fi
+          done
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
