@@ -301,10 +301,28 @@
             }
             
             // 构建新版本的URL - 使用正确的GitHub Pages路径
+            // 从当前URL中提取仓库名称
+            const pathParts = currentPath.split('/');
+            let repoName = '';
+            
+            // 查找仓库名称（通常在 /username/repo-name/ 结构中）
+            for (let i = 0; i < pathParts.length - 1; i++) {
+                if (pathParts[i] && pathParts[i + 1] && 
+                    (pathParts[i + 1] === 'latest' || pathParts[i + 1] === 'v1.0')) {
+                    repoName = pathParts[i];
+                    break;
+                }
+            }
+            
+            // 如果找不到仓库名称，使用默认值
+            if (!repoName) {
+                repoName = 'sdk-bsp-rzn2l-etherkit';
+            }
+            
             if (version === 'master') {
-                newUrl = `${baseUrl}/sdk-bsp-rzn2l-etherkit/latest/${relativePath}`;
+                newUrl = `${baseUrl}/${repoName}/latest/${relativePath}`;
             } else {
-                newUrl = `${baseUrl}/sdk-bsp-rzn2l-etherkit/${version}/${relativePath}`;
+                newUrl = `${baseUrl}/${repoName}/${version}/${relativePath}`;
             }
             
             // 确保URL以 / 结尾（如果是根路径）
