@@ -66,8 +66,8 @@ html_static_path = ['_static']
 # -- Options for internationalization ----------------------------------------
 
 # 多语言支持配置
-locale_dirs = ['../docs/locale/']
-gettext_compact = False
+# locale_dirs = ['../docs/locale/']
+# gettext_compact = False
 
 # -- MyST Parser configuration ----------------------------------------------
 

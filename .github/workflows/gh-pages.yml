@@ -52,12 +52,12 @@ jobs:
           echo "=== Script completed, checking generated files ==="
           ls -la source/
           echo "=== Checking for category directories ==="
-          find source -type d -name "*篇*" -exec ls -la {} \;
+          find source -type d -name "basic" -o -name "driver" -o -name "component" -o -name "protocol" -exec ls -la {} \;
           
       - name: Debug generated structure
         run: |
           echo "=== Generated directory structure ==="
-          find source -type d -name "*篇*" | head -20
+          find source -type d -name "basic" -o -name "driver" -o -name "component" -o -name "protocol" | head -20
           echo "=== Generated index files ==="
           find source -name "index.rst" | head -10
           echo "=== Checking for image files ==="

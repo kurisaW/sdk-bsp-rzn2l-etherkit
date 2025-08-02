@@ -105,7 +105,7 @@ class DocGenerator:
 """
         for project in projects:
             title = self.get_readme_title(project, category)
-            content += f"   {project}/README_zh <{title}>\n"
+            content += f"   {project}/README_zh\n"
         content += f"\n这些示例展示了 EtherKit SDK 的 {category_name}。\n"
         return content
 
