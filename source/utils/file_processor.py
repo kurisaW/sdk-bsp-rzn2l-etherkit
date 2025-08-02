@@ -108,4 +108,9 @@ class FileProcessor:
             if templates_dir.exists():
                 # 如果模板目录已存在，先删除再重新创建
                 shutil.rmtree(templates_dir)
+            (self.dest_dir / '_templates').mkdir(exist_ok=True)
+        else:
+            # 如果目标目录不存在，创建它
+            self.dest_dir.mkdir(exist_ok=True)
+            (self.dest_dir / '_static').mkdir(exist_ok=True)
             (self.dest_dir / '_templates').mkdir(exist_ok=True) 
