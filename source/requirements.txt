@@ -3,3 +3,4 @@ sphinx
 sphinx-autobuild
 requests
 myst-parser
+PyYAML

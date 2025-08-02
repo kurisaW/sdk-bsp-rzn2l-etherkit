@@ -37,7 +37,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('source/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -48,25 +48,27 @@ jobs:
 
       - name: Generate documentation from project READMEs
         run: |
-          python scripts/generate_docs.py
+          cd source
+          python doc_generator.py
           echo "=== Script completed, checking generated files ==="
-          ls -la source/
+          ls -la
           echo "=== Checking for category directories ==="
-          find source -type d -name "basic" -o -name "driver" -o -name "component" -o -name "protocol" -exec ls -la {} \;
+          find . -type d -name "basic" -o -name "driver" -o -name "component" -o -name "protocol" -exec ls -la {} \;
           
       - name: Debug generated structure
         run: |
+          cd source
           echo "=== Generated directory structure ==="
-          find source -type d -name "basic" -o -name "driver" -o -name "component" -o -name "protocol" | head -20
+          find . -type d -name "basic" -o -name "driver" -o -name "component" -o -name "protocol" | head -20
           echo "=== Generated index files ==="
-          find source -name "index.rst" | head -10
+          find . -name "index.rst" | head -10
           echo "=== Checking for image files ==="
-          find source -name "*.png" | head -10
+          find . -name "*.png" | head -10
           echo "=== Checking for README files ==="
-          find source -name "README*.md" | head -10
+          find . -name "README*.md" | head -10
           echo "=== Checking driver category specifically ==="
-          ls -la source/driver/
-          cat source/driver/index.rst
+          ls -la driver/
+          cat driver/index.rst
 
       - name: Build docs
         run: |
