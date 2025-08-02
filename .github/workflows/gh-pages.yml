@@ -1,0 +1,90 @@
+name: Deploy Sphinx docs to GitHub Pages
+
+on:
+  push:
+    branches:
+      - master  # 如主分支为 master 可改为 master
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Set up environment
+        run: |
+          export LANG=C.UTF-8
+          export LC_ALL=C.UTF-8
+          
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r source/requirements.txt
+
+      - name: Generate documentation from project READMEs
+        run: |
+          python scripts/generate_docs.py
+          echo "=== Script completed, checking generated files ==="
+          ls -la source/
+          echo "=== Checking for category directories ==="
+          find source -type d -name "*篇*" -exec ls -la {} \;
+          
+      - name: Debug generated structure
+        run: |
+          echo "=== Generated directory structure ==="
+          find source -type d -name "*篇*" | head -20
+          echo "=== Generated index files ==="
+          find source -name "index.rst" | head -10
+          echo "=== Checking for image files ==="
+          find source -name "*.png" | head -10
+          echo "=== Checking for README files ==="
+          find source -name "README*.md" | head -10
+          echo "=== Checking driver category specifically ==="
+          ls -la source/driver/
+          cat source/driver/index.rst
+
+      - name: Build docs
+        run: |
+          cd source
+          sphinx-build -b html . _build/html || {
+            echo "=== Sphinx build failed, checking for common issues ==="
+            echo "=== Checking for missing files ==="
+            find . -name "*.md" | head -10
+            echo "=== Checking for missing images ==="
+            find . -name "*.png" | head -10
+            exit 1
+          }
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: source/_build/html
+          force_orphan: true
+          user_name: 'github-actions[bot]'
+          user_email: '41898282+github-actions[bot]@users.noreply.github.com' 
