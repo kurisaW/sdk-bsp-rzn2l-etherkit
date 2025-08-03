@@ -1,4 +1,4 @@
-# EtherKit 开发板 BSP 说明
+# RZ EtherKit 开发板 Ethernet 示例说明
 
 **中文** | [**English**](./README.md)
 

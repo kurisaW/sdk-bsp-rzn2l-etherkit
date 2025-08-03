@@ -1,4 +1,4 @@
-# EtherKit Development Board BSP Instructions
+# RZ EtherKit Development Board Ethernet Example Description
 
 **English** | [**中文**](./README_zh.md)
 
