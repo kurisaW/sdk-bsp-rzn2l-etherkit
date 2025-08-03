@@ -163,4 +163,23 @@ html_use_index = True
 html_split_index = False
 html_copy_source = False
 
+# 检测构建环境并配置URL
+import os
+is_github_actions = os.environ.get('GITHUB_ACTIONS') == 'true'
+
+if is_github_actions:
+    # GitHub Pages环境：使用相对URL
+    html_use_relative_urls = True
+    html_baseurl = None
+else:
+    # 本地构建环境：使用相对URL，但禁用canonical链接
+    html_use_relative_urls = True
+    html_baseurl = None
+    # 禁用canonical链接以避免错误的绝对路径
+    html_show_sourcelink = False
+    # 禁用canonical链接
+    html_use_relative_urls = True
+    # 设置空的canonical URL
+    html_baseurl = ""
+
 

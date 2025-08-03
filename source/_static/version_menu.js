@@ -249,7 +249,9 @@
         const baseUrl = window.location.origin;
         
         // 检查是否为本地开发环境
-        const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const isLocalDev = window.location.hostname === 'localhost' || 
+                          window.location.hostname === '127.0.0.1' || 
+                          window.location.protocol === 'file:';
         
         // 构建版本切换URL
         let newUrl;
@@ -257,6 +259,7 @@
         if (isLocalDev) {
             // 本地开发环境：构建正确的本地文件路径
             // 获取当前文件的完整路径
+            const fullPath = window.location.href;
             const currentPath = window.location.pathname;
             
             // 检查当前是否在某个版本目录中
@@ -271,9 +274,17 @@
                 newUrl = `file://${newPath}`;
             } else {
                 // 如果不在版本目录中，构建到版本目录的路径
-                const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
-                const fileName = currentPath.substring(currentPath.lastIndexOf('/') + 1);
-                newUrl = `file://${basePath}/${version === 'master' ? 'latest' : version}/${fileName}`;
+                // 获取当前文件的完整路径
+                const filePath = fullPath.replace('file://', '');
+                
+                // 提取目录路径和文件名
+                const lastSlashIndex = filePath.lastIndexOf('/');
+                const directory = filePath.substring(0, lastSlashIndex);
+                const fileName = filePath.substring(lastSlashIndex + 1);
+                
+                // 构建新版本的路径
+                const versionDir = version === 'master' ? 'latest' : version;
+                newUrl = `file://${directory}/${versionDir}/${fileName}`;
             }
         } else {
             // 生产环境：从当前路径中提取相对路径部分
