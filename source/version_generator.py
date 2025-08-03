@@ -110,121 +110,13 @@ def build_version_docs(version, branch_name=None):
         print(f"✗ 版本 {version} 文档构建失败: {e}")
         return False
 
-def create_version_menu():
-    """创建版本选择菜单"""
-    print("\n创建版本选择菜单...")
-    
-    # 加载所有可用版本
-    versions = load_versions()
-    if not versions:
-        return False
-    
-    # 创建版本菜单HTML
-    menu_html = """<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>版本选择 - SDK 文档</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        .container {
-            text-align: center;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 40px;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            max-width: 500px;
-            width: 90%;
-        }
-        h1 {
-            margin: 0 0 30px 0;
-            font-size: 28px;
-        }
-        .version-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .version-item {
-            margin: 10px 0;
-        }
-        .version-link {
-            display: inline-block;
-            padding: 12px 24px;
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            min-width: 120px;
-        }
-        .version-link:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-        .latest {
-            background: rgba(255, 255, 255, 0.3);
-            font-weight: bold;
-        }
-        .description {
-            margin-top: 20px;
-            opacity: 0.8;
-            font-size: 14px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>选择文档版本</h1>
-        <ul class="version-list">"""
-    
-    for version in versions:
-        if version == 'master':
-            display_name = '最新版本 (latest)'
-            css_class = 'latest'
-        else:
-            display_name = f'版本 {version}'
-            css_class = ''
-        
-        menu_html += f"""
-            <li class="version-item">
-                <a href="./{version}/" class="version-link {css_class}">{display_name}</a>
-            </li>"""
-    
-    menu_html += """
-        </ul>
-        <div class="description">
-            <p>选择您需要的文档版本</p>
-        </div>
-    </div>
-</body>
-</html>"""
-    
-    # 写入版本菜单文件
-    menu_file = Path("_build/html/versions.html")
-    menu_file.parent.mkdir(parents=True, exist_ok=True)
-    
-    with open(menu_file, 'w', encoding='utf-8') as f:
-        f.write(menu_html)
-    
-    print(f"✓ 版本选择菜单创建完成: {menu_file}")
-    return True
+
 
 def create_root_redirect():
     """创建根目录重定向页面"""
     print("\n创建根目录重定向页面...")
     
-    # 创建根目录的 index.html，重定向到版本选择页面
+    # 创建根目录的 index.html，重定向到latest版本
     root_index = Path("_build/html/index.html")
     root_index.parent.mkdir(parents=True, exist_ok=True)
     
@@ -234,7 +126,7 @@ def create_root_redirect():
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SDK 文档</title>
-    <meta http-equiv="refresh" content="0; url=./versions.html">
+    <meta http-equiv="refresh" content="0; url=./latest/">
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -284,8 +176,8 @@ def create_root_redirect():
     <div class="container">
         <div class="spinner"></div>
         <h1>SDK 文档</h1>
-        <p>正在跳转到版本选择页面...</p>
-        <p><a href="./versions.html">如果页面没有自动跳转，请点击这里</a></p>
+        <p>正在跳转到最新版本...</p>
+        <p><a href="./latest/">如果页面没有自动跳转，请点击这里</a></p>
     </div>
 </body>
 </html>"""
@@ -330,12 +222,6 @@ def main():
             success = build_version_docs(version)
             results[version] = success
     
-    # 创建版本选择菜单
-    create_version_menu()
-    
-    # 创建根目录重定向页面
-    create_root_redirect()
-    
     # 输出结果
     print("\n" + "="*50)
     print("版本生成结果:")
@@ -347,6 +233,10 @@ def main():
     total_count = len(results)
     
     print(f"\n总计: {success_count}/{total_count} 个版本生成成功")
+    
+    # 在所有版本构建完成后创建根目录重定向页面
+    if success_count > 0:
+        create_root_redirect()
     
     if success_count == total_count:
         print("🎉 所有版本生成完成！")

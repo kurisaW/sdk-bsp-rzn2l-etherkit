@@ -100,13 +100,6 @@ jobs:
             exit 1
           fi
           
-          if [ -f "source/_build/html/versions.html" ]; then
-            echo "✓ 版本选择菜单已生成"
-          else
-            echo "✗ 版本选择菜单未生成"
-            exit 1
-          fi
-          
           # 检查是否有至少一个版本目录
           version_dirs=$(find source/_build/html -maxdepth 1 -type d -name "latest" -o -name "v*" | wc -l)
           if [ "$version_dirs" -gt 0 ]; then
