@@ -63,7 +63,22 @@ language = project_config.get('language', 'zh_CN')
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = [
+    'MIGRATION_GUIDE.md',
+    'OPTIMIZATION_SUMMARY.md',
+    'README.md',
+    'setup_new_project.py',
+    'build_local.py',
+    'template_config.yaml',
+    'config.yaml',
+    'requirements.txt',
+    'version_generator.py',
+    'doc_generator.py',
+    'utils/',
+    '_templates/',
+    '_static/',
+    '_build/',
+]
 
 # -- Options for HTML output -------------------------------------------------
 

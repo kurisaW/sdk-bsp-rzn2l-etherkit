@@ -3,12 +3,14 @@
 """
 版本生成器
 根据 .github/versions.list 文件生成不同版本的文档
+支持多分支文档生成
 """
 
 import os
 import sys
 import shutil
 import subprocess
+import yaml
 from pathlib import Path
 
 def load_versions():
@@ -30,7 +32,49 @@ def load_versions():
     print(f"加载版本配置: {versions}")
     return versions
 
-def build_version_docs(version):
+def get_branch_name():
+    """获取当前分支名称"""
+    try:
+        result = subprocess.run(
+            ['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
+            capture_output=True, text=True, check=True
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        print("警告: 无法获取当前分支名称")
+        return None
+
+def checkout_branch(branch_name):
+    """切换到指定分支"""
+    try:
+        print(f"切换到分支: {branch_name}")
+        subprocess.run(['git', 'checkout', branch_name], check=True)
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"错误: 无法切换到分支 {branch_name}: {e}")
+        return False
+
+def get_branch_versions():
+    """获取当前分支对应的版本列表"""
+    current_branch = get_branch_name()
+    if not current_branch:
+        return []
+    
+    versions = load_versions()
+    branch_versions = []
+    
+    for version in versions:
+        # 检查版本是否对应当前分支
+        if version == current_branch:
+            branch_versions.append(version)
+        elif version == 'master' and current_branch == 'main':
+            # 处理主分支名称差异
+            branch_versions.append(version)
+    
+    print(f"当前分支 {current_branch} 对应的版本: {branch_versions}")
+    return branch_versions
+
+def build_version_docs(version, branch_name=None):
     """为指定版本构建文档"""
     print(f"\n开始构建版本 {version} 的文档...")
     
@@ -66,11 +110,121 @@ def build_version_docs(version):
         print(f"✗ 版本 {version} 文档构建失败: {e}")
         return False
 
+def create_version_menu():
+    """创建版本选择菜单"""
+    print("\n创建版本选择菜单...")
+    
+    # 加载所有可用版本
+    versions = load_versions()
+    if not versions:
+        return False
+    
+    # 创建版本菜单HTML
+    menu_html = """<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>版本选择 - SDK 文档</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            max-width: 500px;
+            width: 90%;
+        }
+        h1 {
+            margin: 0 0 30px 0;
+            font-size: 28px;
+        }
+        .version-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .version-item {
+            margin: 10px 0;
+        }
+        .version-link {
+            display: inline-block;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+        .version-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .latest {
+            background: rgba(255, 255, 255, 0.3);
+            font-weight: bold;
+        }
+        .description {
+            margin-top: 20px;
+            opacity: 0.8;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>选择文档版本</h1>
+        <ul class="version-list">"""
+    
+    for version in versions:
+        if version == 'master':
+            display_name = '最新版本 (latest)'
+            css_class = 'latest'
+        else:
+            display_name = f'版本 {version}'
+            css_class = ''
+        
+        menu_html += f"""
+            <li class="version-item">
+                <a href="./{version}/" class="version-link {css_class}">{display_name}</a>
+            </li>"""
+    
+    menu_html += """
+        </ul>
+        <div class="description">
+            <p>选择您需要的文档版本</p>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    # 写入版本菜单文件
+    menu_file = Path("_build/html/versions.html")
+    menu_file.parent.mkdir(parents=True, exist_ok=True)
+    
+    with open(menu_file, 'w', encoding='utf-8') as f:
+        f.write(menu_html)
+    
+    print(f"✓ 版本选择菜单创建完成: {menu_file}")
+    return True
+
 def create_root_redirect():
     """创建根目录重定向页面"""
     print("\n创建根目录重定向页面...")
     
-    # 创建根目录的 index.html，重定向到 latest
+    # 创建根目录的 index.html，重定向到版本选择页面
     root_index = Path("_build/html/index.html")
     root_index.parent.mkdir(parents=True, exist_ok=True)
     
@@ -79,8 +233,8 @@ def create_root_redirect():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EtherKit SDK 文档</title>
-    <meta http-equiv="refresh" content="0; url=./latest/">
+    <title>SDK 文档</title>
+    <meta http-equiv="refresh" content="0; url=./versions.html">
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -129,9 +283,9 @@ def create_root_redirect():
 <body>
     <div class="container">
         <div class="spinner"></div>
-        <h1>EtherKit SDK 文档</h1>
-        <p>正在跳转到最新版本...</p>
-        <p><a href="./latest/">如果页面没有自动跳转，请点击这里</a></p>
+        <h1>SDK 文档</h1>
+        <p>正在跳转到版本选择页面...</p>
+        <p><a href="./versions.html">如果页面没有自动跳转，请点击这里</a></p>
     </div>
 </body>
 </html>"""
@@ -146,17 +300,38 @@ def main():
     """主函数"""
     print("开始生成多版本文档...")
     
-    # 加载版本列表
-    versions = load_versions()
-    if not versions:
-        print("错误: 没有找到有效的版本配置")
-        return 1
+    # 检查是否在GitHub Actions环境中
+    is_github_actions = os.environ.get('GITHUB_ACTIONS') == 'true'
     
-    # 为每个版本构建文档
-    results = {}
-    for version in versions:
-        success = build_version_docs(version)
-        results[version] = success
+    if is_github_actions:
+        print("检测到GitHub Actions环境")
+        # 在GitHub Actions中，为所有版本构建文档
+        versions = load_versions()
+        if not versions:
+            print("错误: 没有找到有效的版本配置")
+            return 1
+        
+        # 为每个版本构建文档
+        results = {}
+        for version in versions:
+            success = build_version_docs(version)
+            results[version] = success
+    else:
+        print("本地构建环境")
+        # 在本地环境中，只构建当前分支对应的版本
+        branch_versions = get_branch_versions()
+        if not branch_versions:
+            print("警告: 当前分支没有对应的版本配置")
+            # 尝试构建默认版本
+            branch_versions = ['master']
+        
+        results = {}
+        for version in branch_versions:
+            success = build_version_docs(version)
+            results[version] = success
+    
+    # 创建版本选择菜单
+    create_version_menu()
     
     # 创建根目录重定向页面
     create_root_redirect()

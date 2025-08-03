@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master  # 如主分支为 master 可改为 master
+      - v1.0
 
 jobs:
   build-deploy:
@@ -56,6 +57,21 @@ jobs:
             echo "  - $version"
           done
 
+      - name: Check branch version mapping
+        run: |
+          echo "=== 检查分支版本映射 ==="
+          current_branch="${{ github.ref_name }}"
+          echo "当前分支: $current_branch"
+          
+          # 检查当前分支是否在版本列表中
+          if grep -q "^$current_branch" .github/versions.list; then
+            echo "✓ 当前分支 $current_branch 在版本列表中"
+          else
+            echo "⚠️  当前分支 $current_branch 不在版本列表中"
+            echo "可用的版本分支:"
+            grep -v '^#' .github/versions.list | grep -v '^$' | cut -d'#' -f1 | xargs
+          fi
+
       - name: Generate multi-version documentation
         run: |
           echo "=== 开始生成多版本文档 ==="
@@ -73,6 +89,32 @@ jobs:
               ls -la "$dir" | head -5
             fi
           done
+          
+      - name: Check generated documentation
+        run: |
+          echo "=== 检查生成的文档 ==="
+          if [ -f "source/_build/html/index.html" ]; then
+            echo "✓ 根目录重定向页面已生成"
+          else
+            echo "✗ 根目录重定向页面未生成"
+            exit 1
+          fi
+          
+          if [ -f "source/_build/html/versions.html" ]; then
+            echo "✓ 版本选择菜单已生成"
+          else
+            echo "✗ 版本选择菜单未生成"
+            exit 1
+          fi
+          
+          # 检查是否有至少一个版本目录
+          version_dirs=$(find source/_build/html -maxdepth 1 -type d -name "latest" -o -name "v*" | wc -l)
+          if [ "$version_dirs" -gt 0 ]; then
+            echo "✓ 找到 $version_dirs 个版本目录"
+          else
+            echo "✗ 没有找到版本目录"
+            exit 1
+          fi
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
