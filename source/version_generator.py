@@ -97,13 +97,19 @@ def build_version_docs(version, branch_name=None):
         # 检查是否在GitHub Actions环境中
         is_github_actions = os.environ.get('GITHUB_ACTIONS') == 'true'
         
-        if is_github_actions:
-            # 在GitHub Actions中，需要切换到对应分支
+        # 保存当前分支名称
+        current_branch = get_branch_name()
+        print(f"当前分支: {current_branch}")
+        
+        # 如果需要切换到不同分支
+        if branch_name != current_branch:
             print(f"切换到分支: {branch_name}")
             subprocess.run(['git', 'checkout', branch_name], check=True)
             
             # 拉取最新代码
             subprocess.run(['git', 'pull', 'origin', branch_name], check=True)
+        else:
+            print(f"已在目标分支: {branch_name}")
         
         # 运行文档生成脚本
         subprocess.run([
@@ -117,6 +123,11 @@ def build_version_docs(version, branch_name=None):
             '.',
             str(output_dir)
         ], cwd=".", check=True)
+        
+        # 如果切换了分支，恢复到原始分支
+        if branch_name != current_branch:
+            print(f"恢复到原始分支: {current_branch}")
+            subprocess.run(['git', 'checkout', current_branch], check=True)
         
         print(f"✓ 版本 {version} 文档构建完成: {output_dir}")
         return True
@@ -237,17 +248,38 @@ def main():
             results[version] = success
     else:
         print("本地构建环境")
-        # 在本地环境中，只构建当前分支对应的版本
-        branch_versions = get_branch_versions()
-        if not branch_versions:
-            print("警告: 当前分支没有对应的版本配置")
-            # 尝试构建默认版本
-            branch_versions = ['master']
+        # 在本地环境中，可以选择构建所有版本或只构建当前分支对应的版本
+        import sys
+        build_all = len(sys.argv) > 1 and sys.argv[1] == '--all'
         
-        results = {}
-        for version in branch_versions:
-            success = build_version_docs(version)
-            results[version] = success
+        if build_all:
+            print("构建所有版本...")
+            versions = load_versions()
+            results = {}
+            for version in versions:
+                # 检查分支是否存在
+                try:
+                    subprocess.run(['git', 'ls-remote', '--heads', 'origin', version], 
+                                 capture_output=True, check=True)
+                    print(f"✓ 分支 {version} 存在，开始构建")
+                    success = build_version_docs(version, version)
+                except subprocess.CalledProcessError:
+                    print(f"⚠️  分支 {version} 不存在，跳过构建")
+                    success = False
+                results[version] = success
+        else:
+            print("只构建当前分支对应的版本...")
+            # 只构建当前分支对应的版本
+            branch_versions = get_branch_versions()
+            if not branch_versions:
+                print("警告: 当前分支没有对应的版本配置")
+                # 尝试构建默认版本
+                branch_versions = ['master']
+            
+            results = {}
+            for version in branch_versions:
+                success = build_version_docs(version)
+                results[version] = success
     
     # 输出结果
     print("\n" + "="*50)

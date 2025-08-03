@@ -161,6 +161,7 @@ def main():
     parser.add_argument('--port', type=int, default=8000, help='服务器端口 (默认: 8000)')
     parser.add_argument('--check', action='store_true', help='仅检查依赖')
     parser.add_argument('--check-branch', action='store_true', help='检查分支版本映射')
+    parser.add_argument('--all-versions', action='store_true', help='构建所有版本（需要 --all 参数）')
     
     args = parser.parse_args()
     
@@ -174,6 +175,17 @@ def main():
             subprocess.run([sys.executable, 'check_branch_versions.py'], check=True)
             return
         except subprocess.CalledProcessError:
+            sys.exit(1)
+    
+    if args.all_versions:
+        # 构建所有版本
+        print("构建所有版本...")
+        try:
+            subprocess.run([sys.executable, 'version_generator.py', '--all'], check=True)
+            print("\n🎉 所有版本构建完成!")
+            return
+        except subprocess.CalledProcessError:
+            print("\n❌ 多版本构建失败!")
             sys.exit(1)
     
     success = build_docs(clean=args.clean, serve=args.serve, port=args.port)

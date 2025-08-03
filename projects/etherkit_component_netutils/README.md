@@ -1,4 +1,4 @@
-# EtherKit Development Board BSP Instructions
+# EtherKit Netutils Example
 
 **English** | [**中文**](./README_zh.md)
 
