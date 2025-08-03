@@ -78,6 +78,10 @@ def build_version_docs(version, branch_name=None):
     """为指定版本构建文档"""
     print(f"\n开始构建版本 {version} 的文档...")
     
+    # 确定对应的分支名称
+    if branch_name is None:
+        branch_name = version
+    
     # 创建版本输出目录
     if version == 'master':
         output_dir = Path("_build/html/latest")
@@ -90,6 +94,17 @@ def build_version_docs(version, branch_name=None):
     output_dir.mkdir(parents=True, exist_ok=True)
     
     try:
+        # 检查是否在GitHub Actions环境中
+        is_github_actions = os.environ.get('GITHUB_ACTIONS') == 'true'
+        
+        if is_github_actions:
+            # 在GitHub Actions中，需要切换到对应分支
+            print(f"切换到分支: {branch_name}")
+            subprocess.run(['git', 'checkout', branch_name], check=True)
+            
+            # 拉取最新代码
+            subprocess.run(['git', 'pull', 'origin', branch_name], check=True)
+        
         # 运行文档生成脚本
         subprocess.run([
             sys.executable, 'doc_generator.py'
@@ -203,10 +218,22 @@ def main():
             print("错误: 没有找到有效的版本配置")
             return 1
         
+        # 获取当前分支名称
+        current_branch = get_branch_name()
+        print(f"当前触发分支: {current_branch}")
+        
         # 为每个版本构建文档
         results = {}
         for version in versions:
-            success = build_version_docs(version)
+            # 检查分支是否存在
+            try:
+                subprocess.run(['git', 'ls-remote', '--heads', 'origin', version], 
+                             capture_output=True, check=True)
+                print(f"✓ 分支 {version} 存在，开始构建")
+                success = build_version_docs(version, version)
+            except subprocess.CalledProcessError:
+                print(f"⚠️  分支 {version} 不存在，跳过构建")
+                success = False
             results[version] = success
     else:
         print("本地构建环境")
