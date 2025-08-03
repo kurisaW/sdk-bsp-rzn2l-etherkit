@@ -1,4 +1,4 @@
-# RZ EtherKit Development Board Ethernet Example Description
+# Ethernet Driver Usage Instructions
 
 **English** | [**中文**](./README_zh.md)
 

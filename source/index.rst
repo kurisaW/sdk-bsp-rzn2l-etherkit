@@ -7,6 +7,7 @@
    :maxdepth: 2
    :caption: 目录
 
+   start/index
    basic/index
    driver/index
    component/index

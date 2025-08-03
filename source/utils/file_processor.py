@@ -103,7 +103,7 @@ class FileProcessor:
                             template_files[str(relative_path)] = f.read()
             
             # 只删除生成的文档目录，不删除整个目录
-            for category in ['basic', 'driver', 'component', 'protocol']:
+            for category in ['start', 'basic', 'driver', 'component', 'protocol']:
                 category_dir = self.dest_dir / category
                 if category_dir.exists():
                     shutil.rmtree(category_dir)

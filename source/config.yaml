@@ -16,13 +16,18 @@ repository:
 
 # 文档分类配置
 categories:
+  start:
+    name: "快速上手篇"
+    description: "快速上手"
+    patterns:
+      - "template_*"
+
   basic:
     name: "基础篇"
     description: "基础功能示例"
     patterns:
       - "etherkit_basic_*"
       - "etherkit_blink_led"
-      - "etherkit_factory"
   
   driver:
     name: "驱动篇"
@@ -55,6 +60,7 @@ generation:
   copy_dirs:
     - "figures"
   output_structure:
+    - "start"
     - "basic"
     - "driver"
     - "component"

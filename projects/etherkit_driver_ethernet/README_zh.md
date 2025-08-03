@@ -1,4 +1,4 @@
-# RZ EtherKit 开发板 Ethernet 示例说明
+# Ethernet 驱动示例
 
 **中文** | [**English**](./README.md)
 

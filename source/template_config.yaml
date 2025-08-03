@@ -26,6 +26,12 @@ repository:
 # ============================================================================
 categories:
   # 基础功能示例
+  start:
+    name: "快速上手篇"
+    description: "快速上手示例"
+    patterns:
+      - "your_template_*"                     # 修改为你的基础项目命名模式
+
   basic:
     name: "基础篇"
     description: "基础功能示例"
@@ -82,6 +88,7 @@ generation:
   
   # 输出目录结构 (必须与categories中的键名一致)
   output_structure:
+    - "start"
     - "basic"
     - "driver"
     - "component"
